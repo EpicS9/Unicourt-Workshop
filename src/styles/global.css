@@ -1,1 +1,63 @@
 @import "tailwindcss";
+
+/**
+ * High-contrast overrides for users who need stronger text, border, and
+ * control contrast than the standard dark theme provides.
+ */
+html.high-contrast {
+    color-scheme: light;
+}
+
+html.high-contrast body {
+    background: #ffffff !important;
+    color: #000000 !important;
+}
+
+html.high-contrast header {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+
+html.high-contrast main,
+html.high-contrast main [class*='bg-slate-'],
+html.high-contrast main [class*='bg-blue-'],
+html.high-contrast main [class*='bg-purple-'] {
+    color: #000000 !important;
+}
+
+html.high-contrast main [class*='text-slate-'],
+html.high-contrast main [class*='text-blue-'],
+html.high-contrast main [class*='text-purple-'] {
+    color: #000000 !important;
+}
+
+html.high-contrast main [class*='border-'] {
+    border-color: #000000 !important;
+}
+
+html.high-contrast main a {
+    color: #0000ee !important;
+}
+
+html.high-contrast main button,
+html.high-contrast main select,
+html.high-contrast main input {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #000000 !important;
+}
+
+html.high-contrast #menu {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 2px solid #000000;
+}
+
+html.high-contrast #menu a {
+    color: #000000 !important;
+}
+
+html.high-contrast header a,
+html.high-contrast header button {
+    color: #ffffff !important;
+}

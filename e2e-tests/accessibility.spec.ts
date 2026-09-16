@@ -1,3 +1,6 @@
+/**
+ * End-to-end accessibility checks for site semantics, keyboard use, and contrast controls.
+ */
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -186,6 +189,34 @@ test.describe('Accessibility Tests', () => {
     );
     
     expect(contrastViolations).toEqual([]);
+  });
+
+  test('high contrast toggle persists across reloads', async ({ page }) => {
+    await page.goto('/');
+
+    const contrastToggle = page.getByTestId('contrast-toggle');
+
+    await test.step('Enable high contrast with the keyboard', async () => {
+      await expect(contrastToggle).toHaveAttribute('aria-pressed', 'false');
+      await contrastToggle.focus();
+      await page.keyboard.press('Space');
+      await expect(contrastToggle).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.locator('html')).toHaveClass(/high-contrast/);
+      await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    });
+
+    await test.step('Restore the preference after a page reload', async () => {
+      await page.reload();
+      await expect(page.getByTestId('contrast-toggle')).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.locator('html')).toHaveClass(/high-contrast/);
+      await expect(page.getByRole('button', { name: 'Standard contrast' })).toBeVisible();
+    });
+
+    await test.step('Disable high contrast', async () => {
+      await page.getByRole('button', { name: 'Standard contrast' }).click();
+      await expect(page.getByTestId('contrast-toggle')).toHaveAttribute('aria-pressed', 'false');
+      await expect(page.locator('html')).not.toHaveClass(/high-contrast/);
+    });
   });
 
   test('semantic HTML - main landmarks should be present', async ({ page }) => {
