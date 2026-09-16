@@ -1,3 +1,6 @@
+/**
+ * End-to-end tests for game listing, navigation, and filtering.
+ */
 import { test, expect, type Response } from '@playwright/test';
 
 test.describe('Game Listing and Navigation', () => {
@@ -21,6 +24,60 @@ test.describe('Game Listing and Navigation', () => {
       const gameCards = page.getByTestId('game-card');
       await expect(gameCards.first().getByTestId('game-title')).toBeVisible();
       await expect(gameCards.first().getByTestId('game-title')).not.toBeEmpty();
+    });
+  });
+
+  test('should filter games by category and publisher', async ({ page }) => {
+    const categoryFilter = page.getByTestId('category-filter-1');
+    const secondCategoryFilter = page.getByTestId('category-filter-2');
+    const publisherFilter = page.getByTestId('publisher-filter');
+    const visibleCards = page.locator('[data-testid="game-card"]:visible');
+
+    await page.goto('/');
+
+    await test.step('Verify filter controls are accessible', async () => {
+      await expect(page.getByRole('group', { name: 'Filter by category' })).toBeVisible();
+      await expect(categoryFilter).toBeVisible();
+      await expect(publisherFilter).toHaveAccessibleName('Filter by publisher');
+      await expect(page.getByTestId('clear-filters')).toBeVisible();
+    });
+
+    await test.step('Filter by category', async () => {
+      await categoryFilter.check();
+      await expect(visibleCards).toHaveCount(await page.locator('[data-game-category-id="1"]:visible').count());
+      await expect(page.getByTestId('visible-game-count')).not.toHaveText('0');
+    });
+
+    await test.step('Combine multiple category filters', async () => {
+      await secondCategoryFilter.check();
+      await expect(page.getByTestId('visible-game-count')).toHaveText('8');
+    });
+
+    await test.step('Combine category and publisher filters', async () => {
+      await publisherFilter.selectOption({ label: 'CodeForge Studios' });
+      await expect(visibleCards).toHaveCount(2);
+      const selectedPublisherId = await publisherFilter.locator('option:checked').getAttribute('value');
+      if (selectedPublisherId === null) {
+        throw new Error('The selected publisher option must have a value.');
+      }
+      await expect(visibleCards.first()).toHaveAttribute('data-game-publisher-id', selectedPublisherId);
+    });
+
+    await test.step('Show an empty state when no games match', async () => {
+      await page.locator('[data-testid="category-filter-1"]').uncheck();
+      await page.locator('[data-testid="category-filter-2"]').uncheck();
+      await categoryFilter.evaluate((input) => {
+        input.dataset.categoryId = 'missing-category';
+        (input as HTMLInputElement).checked = true;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      await expect(page.getByTestId('filter-empty-state')).toBeVisible();
+      await expect(page.getByTestId('visible-game-count')).toHaveText('0');
+    });
+
+    await test.step('Clear filters', async () => {
+      await page.getByTestId('clear-filters').click();
+      await expect(visibleCards).toHaveCount(await page.locator('[data-testid="game-card"]').count());
     });
   });
 
